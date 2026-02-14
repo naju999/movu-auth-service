@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Movu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .welcome-card {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-card h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .welcome-card p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .token-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: left;
+            overflow-x: auto;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de navegación -->
+    <nav class="navbar">
+        <div class="navbar-brand">🚗 Movu</div>
+        <div class="navbar-user">
+            <img id="userAvatar" src="" alt="Avatar" class="user-avatar" style="display: none;">
+            <div class="user-info">
+                <span id="userName" class="user-name">Cargando...</span>
+                <span id="userEmail" class="user-email"></span>
+            </div>
+            <button id="logoutBtn" class="logout-btn">Cerrar sesión</button>
+        </div>
+    </nav>
+
+    <!-- Contenedor principal -->
+    <div class="container">
+        <!-- Tarjeta de bienvenida -->
+        <div class="welcome-card">
+            <h1>¡Bienvenido a Movu!</h1>
+            <p id="welcomeMessage">Sistema de gestión de transporte distribuido</p>
+        </div>
+
+        <!-- Mensaje de error (oculto por defecto) -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🚗</div>
+                <div class="stat-title">Viajes realizados</div>
+                <div class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-title">Usuarios activos</div>
+                <div class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-title">Calificación promedio</div>
+                <div class="stat-value">0.0</div>
+            </div>
+        </div>
+
+        <!-- Información del token (para debug) -->
+        <div class="token-info" id="tokenInfo">
+            <strong>Token Information (Debug):</strong><br>
+            <div class="loader"></div> Cargando información del usuario...
+        </div>
+    </div>
+
+    <script>
+        // Cliente de autenticación
+        const authClient = {
+            tokenKey: 'access_token',
+            refreshKey: 'refresh_token',
+            authServiceUrl: 'http://localhost:8081',
+
+            getToken: function() {
+                return localStorage.getItem(this.tokenKey);
+            },
+
+            getRefreshToken: function() {
+                return localStorage.getItem(this.refreshKey);
+            },
+
+            saveToken: function(token) {
+                localStorage.setItem(this.tokenKey, token);
+            },
+
+            saveRefreshToken: function(refreshToken) {
+                localStorage.setItem(this.refreshKey, refreshToken);
+            },
+
+            isAuthenticated: function() {
+                return !!this.getToken();
+            },
+
+            captureTokensFromURL: function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+                const refreshToken = urlParams.get('refresh');
+
+                if (token) {
+                    this.saveToken(token);
+                    if (refreshToken) {
+                        this.saveRefreshToken(refreshToken);
+                    }
+
+                    // Limpiar la URL
+                    window.history.replaceState({}, document.title, '/index.html');
+                    console.log('✓ Tokens capturados y guardados');
+                    return true;
+                }
+                return false;
+            },
+
+            getCurrentUser: async function() {
+                try {
+                    const response = await fetch(`${this.authServiceUrl}/api/auth/me`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${this.getToken()}`
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Error al obtener usuario');
+                    }
+
+                    const data = await response.json();
+                    return data.success ? data.user : null;
+                } catch (error) {
+                    console.error('Error obteniendo usuario:', error);
+                    return null;
+                }
+            },
+
+            logout: function() {
+                localStorage.removeItem(this.tokenKey);
+                localStorage.removeItem(this.refreshKey);
+                window.location.href = '/login.html';
+            }
+        };
+
+        // Función para mostrar error
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Función para decodificar JWT (sin verificar firma)
+        function decodeJWT(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error('Error decodificando JWT:', e);
+                return null;
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Inicializando aplicación...');
+
+            // 1. Capturar tokens de la URL (si vienen del callback)
+            authClient.captureTokensFromURL();
+
+            // 2. Verificar autenticación
+            if (!authClient.isAuthenticated()) {
+                console.log('Usuario no autenticado, redirigiendo al login...');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // 3. Obtener información del usuario
+            try {
+                const user = await authClient.getCurrentUser();
+                
+                if (!user) {
+                    throw new Error('No se pudo obtener información del usuario');
+                }
+
+                console.log('Usuario autenticado:', user);
+
+                // Actualizar UI con información del usuario
+                document.getElementById('userName').textContent = user.username;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('welcomeMessage').textContent = 
+                    `¡Hola ${user.username}! Has iniciado sesión exitosamente con Google`;
+
+                // Mostrar avatar si está disponible
+                if (user.picture) {
+                    const avatar = document.getElementById('userAvatar');
+                    avatar.src = user.picture;
+                    avatar.style.display = 'block';
+                }
+
+                // Mostrar información del token (debug)
+                const token = authClient.getToken();
+                const decodedToken = decodeJWT(token);
+                const tokenInfo = document.getElementById('tokenInfo');
+                
+                tokenInfo.innerHTML = `
+                    <strong>Token Information (Debug):</strong><br><br>
+                    <strong>User ID:</strong> ${user.id}<br>
+                    <strong>Username:</strong> ${user.username}<br>
+                    <strong>Email:</strong> ${user.email}<br>
+                    <strong>Role:</strong> ${user.role}<br>
+                    <strong>Provider:</strong> ${user.provider}<br>
+                    <strong>Token Expiry:</strong> ${decodedToken ? new Date(decodedToken.exp * 1000).toLocaleString() : 'N/A'}<br>
+                    <br>
+                    <strong>Access Token:</strong><br>
+                    <textarea style="width: 100%; height: 100px; font-family: monospace; font-size: 10px;">${token}</textarea>
+                `;
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error al cargar la información del usuario. Por favor, inicia sesión de nuevo.');
+                
+                // Esperar 2 segundos y redirigir al login
+                setTimeout(() => {
+                    authClient.logout();
+                }, 2000);
+            }
+
+            // 4. Configurar botón de logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                    authClient.logout();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

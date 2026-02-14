@@ -1,0 +1,49 @@
+# Version control
+.git
+.github
+.gitignore
+
+# Environment
+.env
+.env.*
+
+# Dependencies (installed in container)
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Testing
+tests
+coverage
+*.test.js
+jest.config.js
+.nyc_output
+
+# Build artifacts
+dist
+build
+*.log
+
+# Documentation
+README.md
+CHANGELOG.md
+TESTING.md
+GOOGLE_OAUTH_SETUP.md
+CI_CD.md
+*.md
+docs
+examples
+
+# Development
+test-connection.ps1
+test-endpoints.ps1
+api-tests.http
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
